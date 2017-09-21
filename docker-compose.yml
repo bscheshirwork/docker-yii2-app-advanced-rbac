@@ -17,6 +17,7 @@ services:
     ports:
       - "80:80"
       - "8080:8080"
+      - "8084:8084"
     depends_on:
       - php
     volumes_from:

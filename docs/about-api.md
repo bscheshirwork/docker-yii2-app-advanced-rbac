@@ -1,0 +1,44 @@
+# API
+
+Данная ветка и инструкция не включена в основную ветку и может быть слита с помощью команды 
+```sh
+git pull https://github.com/bscheshirwork/docker-yii2-app-advanced-rbac.git api
+cd php-code
+git pull https://github.com/bscheshirwork/yii2-app-advanced-rbac.git api
+```
+
+API представлено отдельным приложением `api`, с своими настройками и отдельным сервером `api.dev` доступным на портах
+`8082` и `8084` для `docker-run/docker-compose.yml` и `docker-compose.yml` соответственно
+
+Для примера работы использовано действие отправки обратной связи.
+
+В примере с контроллером
+`php-code/api/modules/v1/controllers/FeedbackController.php`
+
+Ресурс может быть только создан по POST запросу `v1/feedback/options` с параметрами
+```
+
+```
+Ответы могут быть со статусами `204`, `500`, `400`.
+
+Приложение для `api` не имеет собственных `RESTful` контроллеров и использует для работы модули, 
+названые соответственно версии `api`: `v1` и т.п.
+
+Для работы добавлены алиасы: общий в `php-code/common/config/bootstrap.php`
+```php
+Yii::setAlias('@api', dirname(dirname(__DIR__)) . '/api');
+```
+
+Для конкретных версиий `api` в `php-code/api/config/bootstrap.php`
+```php
+Yii::setAlias('@api/v1', dirname(dirname(__DIR__)) . '/api/modules/v1');
+```
+
+Для `RESTful` `api` следует отключить сессии - в инициализации модуля. В контроллерах следует наследоватся от 
+`yii\rest\Controller` для базового функционала либо от `yii\rest\ActiveController` для упрощённой работы с `ActiveRecord`
+
+Для распределения дейтвий по методам протокола `verbs()` для не-встроеных действий, как обычно, `actions()`.
+
+[Документация](https://github.com/yiisoft/yii2/tree/master/docs/guide-ru#%D0%92%D0%B5%D0%B1-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D1%8B-rest)
+
+[Некоторые аспекты реализации](http://developer.uz/blog/tag/rest-api/)

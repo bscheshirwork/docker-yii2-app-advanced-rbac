@@ -19,6 +19,10 @@ services:
       - "8080:80"
       - "8081:8080"
       - "8082:8084"
+    networks:
+      default:
+        aliases:
+         - api.dev # https access from same docker network: match CN
     depends_on:
       - php
     volumes_from:

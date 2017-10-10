@@ -314,10 +314,15 @@ $ openssl verify -CAfile ca.crt db/newcerts/04.pem
                                                                  
 
 ### Подключение к полученному `ssl` серверу с помощью `curl`
+Тестовое подключение: 
+- из корня проекта
 ```sh
-$ curl -v -k --key nginx-conf/ssl/client01.key --cert nginx-conf/ssl/client01.crt --url https://0.0.0.0:8082/v1/feedback/create --request POST --data "name=tester&email=tester@gmail.com&subject=test&body=message body"
+$ curl -v --cacert nginx-conf/ssl/ca.crt --key nginx-conf/ssl/client01.key --cert nginx-conf/ssl/client01.crt --url https://0.0.0.0:8082/v1/feedback/create --request POST --data "name=tester&email=tester@gmail.com&subject=test&body=message body"
 ```
-Использована опция -k, потому что сертификат в примере самоподписанный
+- из дирректории с сертификатами - `client01.crt`  + `client01.key` и `ca.crt`
+```sh
+$ curl -v --cacert ca.crt --key client01.key --cert client01.crt --url https://0.0.0.0:8082/v1/feedback/create --request POST --data "name=tester&email=tester@gmail.com&subject=test&body=message body"
+```
 
 ### Создание сертификата в формате `PKCS#12` для браузера клиента
 
@@ -326,19 +331,36 @@ $ curl -v -k --key nginx-conf/ssl/client01.key --cert nginx-conf/ssl/client01.cr
 ```sh
 openssl pkcs12 -export -in client01.crt -inkey client01.key -certfile ca.crt -out client01.p12 -passout pass:q1w2e3
 ```
+
+### Конвертирование в другие форматы
+
+Для других вариантов создания подключения 
+(например `php`: `stream_context_create` + `fopen`; `arduino esp8266` : `WiFiClientSecure.connect`) 
+может понадобится конвертация ключей:
+
+```sh
+$ openssl x509 -in ca.crt -out ca.crt.der -outform DER 
+$ openssl x509 -in client01.crt -out client01.crt.der -outform DER 
+$ openssl rsa -in client01.key -out client01.key.der -outform DER
+```
+
+`-outform` выбирайте соответственно потребностям.
+
+### Итоги
 В результате были созданы:
 
-    корневой сертификат - ca.cer;
+- корневой сертификат - `ca.crt`;
 
-    сертификат сервера - server.cer;
+- сертификат сервера - `server.crt`;
 
-    сертификат клиента с зашифрованным ключом - client.pfx (client01.p12).
+- сертификат клиента и ключ клиента `client01.crt` + `client01.key` / сертификат клиента с зашифрованным ключом - `client01.p12`.
 
 Сертификаты необходимо разместить следующим образом:
 
-    на сервере: корневой сертификат и серверный сертификат с ключом (ca.cer, server,cer и server.key);
+- на сервере: корневой сертификат и серверный сертификат с ключом (`ca.crt`, `server.crt` и `server.key`);
 
-    на рабочем компьютере: клиентский сертификат с зашифрованным ключом в формате *.pfx и корневой сертификат без ключа.
+- на клиенте: клиентский сертификат `client01.crt`, секретный ключ клиента `client01.key`, корневой сертификат без ключа `ca.crt`
+
+- на клиенте с доступом из браузера: клиентский сертификат с зашифрованным ключом в формате *.p12 и корневой сертификат без ключа.
     Клиентский сертификат устанавливается в личное хранилище пользователя, корневой сертификат импортируется в хранилище 
     доверенных корневых центров сертификации локального компьютера.
-

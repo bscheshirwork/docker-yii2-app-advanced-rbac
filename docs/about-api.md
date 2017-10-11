@@ -11,8 +11,8 @@ git pull https://github.com/bscheshirwork/yii2-app-advanced-rbac.git api
 локальных конфигов и точек входа, а также задать права на запись
 `php-code/api/runtime/`
 
-API представлено отдельным приложением `api`, с своими настройками и отдельным сервером `api.dev` доступным на портах
-`8082` и `8084` для `docker-run/docker-compose.yml` и `docker-compose.yml` соответственно
+API представлено отдельным приложением `api`, с своими настройками и отдельным сервером `api.dev` доступным на порту
+`8084` для `docker-run/docker-compose.yml` и `docker-compose.yml`
 
 Для примера работы использовано действие отправки обратной связи.
 

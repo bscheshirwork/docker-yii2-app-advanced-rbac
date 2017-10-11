@@ -323,6 +323,9 @@ $ curl -v --cacert nginx-conf/ssl/ca.crt --key nginx-conf/ssl/client01.key --cer
 ```sh
 $ curl -v --cacert ca.crt --key client01.key --cert client01.crt --url https://0.0.0.0:8082/v1/feedback/create --request POST --data "name=tester&email=tester@gmail.com&subject=test&body=message body"
 ```
+### Примеры клиента
+
+Получив положительный результат тестового подключения, можно попробовать [примеры php-клиентов](./example-api-ssl-client.md).
 
 ### Создание сертификата в формате `PKCS#12` для браузера клиента
 
@@ -333,6 +336,8 @@ openssl pkcs12 -export -in client01.crt -inkey client01.key -certfile ca.crt -ou
 ```
 
 ### Конвертирование в другие форматы
+
+[Форматы сертификатов](./about-ssl-cert-form.md)  
 
 Для других вариантов создания подключения 
 (например `php`: `stream_context_create` + `fopen`; `arduino esp8266` : `WiFiClientSecure.connect`) 

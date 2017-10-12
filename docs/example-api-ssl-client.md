@@ -10,6 +10,12 @@
         // порты внутренние.
         // добавлены алиасы для внутренней сети докера - api.dev -> nginx
         $url = 'https://api.dev:8084/v1/feedback/create';
+        $postContent = json_encode([
+            'name' => 'test stream',
+            'email' => 'tester@gmail.com',
+            'subject' => 'test stream json_encode',
+            'body' => 'message body кирилица += ! ',
+        ]);
 
         $contextOptions = [
             'http' => [
@@ -18,14 +24,10 @@
                 'ignore_errors' => true,
                 //Извлечь содержимое даже в случае, если присутствует код статуса неуспешного завершения
                 'headers' => [
+                    'Content-Type: application/json; charset=UTF-8',
                     'Host: api.dev',
                 ],
-                'content' => $postContent = implode('&', [
-                    'name=' . urlencode('testerfopen'),
-                    'email=' . urlencode('tester@gmail.com'),
-                    'subject=' . urlencode('testfopen'),
-                    'body=' . urlencode('message body кирилица += ! urlencode'),
-                ]),
+                'content' => $postContent,
             ],
             'ssl' => [
                 'verify_peer' => true,
@@ -117,7 +119,10 @@
         curl_setopt($ch, CURLOPT_USERAGENT,
             'API клиент'); // Содержимое заголовка "User-Agent: ", посылаемого в HTTP-запросе.
         curl_setopt($ch, CURLOPT_HTTPHEADER,
-            ['Host: api.dev']); // Массив устанавливаемых HTTP-заголовков, в формате ['Content-type: text/plain', 'Content-length: 100']
+            [
+                'Content-type: application/json',
+                'Host: api.dev',
+            ]); // Массив устанавливаемых HTTP-заголовков, в формате ['Content-type: text/plain', 'Content-length: 100']
         curl_setopt($ch, CURLOPT_POSTFIELDS,
             $postContent); // Все данные, передаваемые в HTTP POST-запросе. Для передачи файла, укажите перед именем файла @, а также используйте полный путь к файлу. Тип файла также может быть указан с помощью формата ';type=mimetype', следующим за именем файла. Этот параметр может быть передан как в качестве url-закодированной строки, наподобие 'para1=val1&para2=val2&...', так и в виде массива, ключами которого будут имена полей, а значениями - их содержимое. Передача массива в CURLOPT_POSTFIELDS закодирует данные в виде multipart/form-data, тогда как передача URL-кодированной строки закодирует данные в виде application/x-www-form-urlencoded. Начиная с версии PHP 5.2.0, при передаче файлов с префиксом @, value должен быть массивом. С версии PHP 5.5.0, префикс @ устарел и файлы можно отправлять с помощью CURLFile. Префикс @ можно отключить, чтобы можно было передавать значения, начинающиеся с @, задав опцию CURLOPT_SAFE_UPLOAD в значение TRUE.
         curl_setopt($ch, CURLOPT_TIMEOUT, 10);
@@ -155,7 +160,14 @@
 После [PR 121](https://github.com/yiisoft/yii2-httpclient/pull/121) 
 
 ```php
-        $client = new Client();
+        $client = new Client([
+            'requestConfig' => [
+                'format' => Client::FORMAT_JSON,
+            ],
+            'responseConfig' => [
+                'format' => Client::FORMAT_JSON,
+            ],
+        ]);
 
         $response = $client->createRequest()
             ->setMethod('post')
@@ -181,7 +193,13 @@
         var_dump($response);
 
         $client = new Client([
-            'transport' => 'yii\httpclient\CurlTransport' //только cURL поддерживает нужные нам параметры
+            'transport' => 'yii\httpclient\CurlTransport',
+            'requestConfig' => [
+                'format' => Client::FORMAT_JSON,
+            ],
+            'responseConfig' => [
+                'format' => Client::FORMAT_JSON,
+            ],
         ]);
         $response = $client->createRequest()
             ->setMethod('post')

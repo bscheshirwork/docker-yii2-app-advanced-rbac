@@ -154,7 +154,7 @@
 
 После [PR 121](https://github.com/yiisoft/yii2-httpclient/pull/121) 
 
-```
+```php
         $client = new Client();
 
         $response = $client->createRequest()

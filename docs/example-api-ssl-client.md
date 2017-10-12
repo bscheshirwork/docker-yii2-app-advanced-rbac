@@ -150,3 +150,59 @@
 ```
 
 ## yiisoft/yii2-httpclient
+Для приложений на базе `yii2`. Требует установки [yiisoft/yii2-httpclient](https://github.com/yiisoft/yii2-httpclient) (В некоторых случаях уже используется, т.к. упомянуто в зависимостях)
+
+После [PR 121](https://github.com/yiisoft/yii2-httpclient/pull/121) 
+
+```
+        $client = new Client();
+
+        $response = $client->createRequest()
+            ->setMethod('post')
+            ->setUrl('https://api.dev:8084/v1/feedback/create')
+            ->setData(['name' => 'test yii2-httpclient', 'email' => 'tester@gmail.com', 'subject' => 'test yii2-httpclient', 'body' => 'message body кирилица += ! '])
+            ->setOptions([
+                // 'ssl' . Inflector::underscore
+                'sslVerifyPeer' => true,
+                // not sslCaFile!
+                'sslCafile' => Yii::$app->basePath . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'ca.crt',
+                // сертификат CA. PEM сертификаты могут иметь расширение .pem, .crt, .cer, и .key (файл приватного ключа)
+                // Расположение файла сертификата в локальной файловой системе, который следует использовать с опцией контекста verify_peer для проверки подлинности удалённого узла.
+                'sslLocalCert' => Yii::$app->basePath . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'client01.crt',
+                // сертификат клиента
+                // Путь к локальному сертификату в файловой системе. Это должен быть файл, закодированный PEM, который содержит ваш сертификат и приватный ключ. Он дополнительно может содержать публичный ключ эмитента. Приватный ключ также может содержаться в отдельном файле, заданным local_pk.
+                'sslLocalPk' => Yii::$app->basePath . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'client01.key',
+                // ключ клиента
+                // Путь к локальному файлу с приватным ключем в случае отдельных файлов сертификата (local_cert) и приватного ключа.
+                // 'sslPassphrase' => 'client01 crt example pass phrase',
+                // Идентификационная фраза, с которой ваш файл local_cert был закодирован.
+            ])
+            ->send();
+        var_dump($response);
+
+        $client = new Client([
+            'transport' => 'yii\httpclient\CurlTransport' //только cURL поддерживает нужные нам параметры
+        ]);
+        $response = $client->createRequest()
+            ->setMethod('post')
+            ->setUrl('https://api.dev:8084/v1/feedback/create')
+            ->setData(['name' => 'test yii2-httpclient curl', 'email' => 'tester@gmail.com', 'subject' => 'test yii2-httpclient curl', 'body' => 'message body кирилица += ! '])
+            ->setOptions([
+                // 'ssl' . Inflector::underscore
+                'sslVerifyPeer' => true,
+                // not sslCaFile!
+                'sslCafile' => Yii::$app->basePath . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'ca.crt',
+                // сертификат CA. PEM сертификаты могут иметь расширение .pem, .crt, .cer, и .key (файл приватного ключа)
+                // Расположение файла сертификата в локальной файловой системе, который следует использовать с опцией контекста verify_peer для проверки подлинности удалённого узла.
+                'sslLocalCert' => Yii::$app->basePath . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'client01.crt',
+                // сертификат клиента
+                // Путь к локальному сертификату в файловой системе. Это должен быть файл, закодированный PEM, который содержит ваш сертификат и приватный ключ. Он дополнительно может содержать публичный ключ эмитента. Приватный ключ также может содержаться в отдельном файле, заданным local_pk.
+                'sslLocalPk' => Yii::$app->basePath . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'client01.key',
+                // ключ клиента
+                // Путь к локальному файлу с приватным ключем в случае отдельных файлов сертификата (local_cert) и приватного ключа.
+                // 'sslPassphrase' => 'client01 crt example pass phrase',
+                // Идентификационная фраза, с которой ваш файл local_cert был закодирован.
+            ])
+            ->send();
+        var_dump($response);
+```

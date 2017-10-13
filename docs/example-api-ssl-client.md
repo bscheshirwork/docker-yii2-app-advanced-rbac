@@ -157,8 +157,6 @@
 ## yiisoft/yii2-httpclient
 Для приложений на базе `yii2`. Требует установки [yiisoft/yii2-httpclient](https://github.com/yiisoft/yii2-httpclient) (В некоторых случаях уже используется, т.к. упомянуто в зависимостях)
 
-После [PR 121](https://github.com/yiisoft/yii2-httpclient/pull/121) 
-
 ```php
         $client = new Client([
             'requestConfig' => [

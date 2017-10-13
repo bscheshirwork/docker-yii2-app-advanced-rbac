@@ -23,7 +23,7 @@
                 'method' => 'POST',
                 'ignore_errors' => true,
                 //Извлечь содержимое даже в случае, если присутствует код статуса неуспешного завершения
-                'headers' => [
+                'header' => [
                     'Content-Type: application/json; charset=UTF-8',
                     'Host: api.dev',
                 ],

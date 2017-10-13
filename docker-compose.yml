@@ -14,10 +14,10 @@ services:
   nginx:
     image: nginx:1.13.5-alpine
     restart: always
-    ports:
-      - "80:80"
-      - "8080:8080"
-      - "8084:8084"
+#    ports: # use nginx-proxy in same network (see ./docs/nginx-proxy.md)
+#      - "8080:8080"
+#      - "8081:8081"
+#      - "8084:8084"
     depends_on:
       - php
     volumes_from:

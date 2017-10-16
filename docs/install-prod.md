@@ -418,92 +418,29 @@ crontab -e
 
 Также стоит посмотреть в сторону сине-зелёного деплоя и [проекта "рой"](https://github.com/dmstr/docker-roj) 
 
+# Автообновление списка отозванных сертификатов
+
+```
+touch /home/dev/projects/yii2advanced_rbac_crl_update
+chmod +x /home/dev/projects/yii2advanced_rbac_crl_update
+```
+Скрипт
+```
+#!/bin/bash
+cd /home/dev/projects/docker-yii2-app-advanced-rbac/nginx-conf/ssl
+openssl ca -config openssl.cnf -gencrl -out crl.pem
+```
+
+crontab -e
+```
+* 11 */6 * 1 /home/dev/projects/yii2advanced_rbac_crl_update > /dev/null 2>&1
+```
 
 # Использование nginx-proxy
 Из соображений безопастности на продакшене будте включён `firewall`
 Можно отредактировать конфиг nginx с распределением по имени сервера и 80 портом - если данный сервис будет единственным
 либо же использовать дополнительный прокси. Для этих целей создан одноимённый репозиторий и развёрнут на сервере.
-Настройки следующие:
-
-`docker-compose.yml`
-```
-version: '2'
-services:
-  nginx-proxy:
-    image: nginx:1.11.12-alpine
-    restart: always
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx-conf:/etc/nginx/conf.d #nginx-conf
-      - ./nginx-logs:/var/log/nginx #nginx-logs
-networks:
-  default:
-    external:
-      name: yii2advanced_default
-```
-`nginx.conf`
-```
-server {
-    listen  80;
-    #listen [::]:80 default_server ipv6only=on; ## слушаем ipv6
-    server_name frontend.yii2advanced.ru www.frontend.yii2advanced.ru;
-
-    access_log  /var/log/nginx/proxy-access.log;
-    error_log   /var/log/nginx/proxy-error.log;
-
-    location / {
-        proxy_pass http://nginx:80/;
-        proxy_set_header   X-Real-IP $remote_addr;
-        proxy_set_header   Host $http_host;
-        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
-
-    location ~ /\.(ht|svn|git) {
-        deny all;
-    }
-}
-
-server {
-    listen  80;
-    #listen [::]:80 default_server ipv6only=on; ## слушаем ipv6
-    server_name backend.yii2advancedadmin.ru www.backend.yii2advancedadmin.ru;
-
-    access_log  /var/log/nginx/proxy-access.log;
-    error_log   /var/log/nginx/proxy-error.log;
-
-    location / {
-        proxy_pass http://nginx:8080/;
-        proxy_set_header   X-Real-IP $remote_addr;
-        proxy_set_header   Host $http_host;
-        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
-
-    location ~ /\.(ht|svn|git) {
-        deny all;
-    }
-}
-
-server {
-    listen  80;
-    #listen [::]:80 default_server ipv6only=on; ## слушаем ipv6
-    server_name anotherservicedomain.ru;
-
-    access_log  /var/log/nginx/proxy-access.log;
-    error_log   /var/log/nginx/proxy-error.log;
-
-    location / {
-        proxy_pass http://nginx:80808/;
-        proxy_set_header   X-Real-IP $remote_addr;
-        proxy_set_header   Host $http_host;
-        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
-
-    location ~ /\.(ht|svn|git) {
-        deny all;
-    }
-}
-```
+Настройки следующие: [nginx-proxy](./nginx-proxy.md)
 
 # Использование кеша для структуры таблиц
 

@@ -140,68 +140,7 @@ openssl x509 -req -days 3650 -in server.csr -CA ca.crt -CAkey ca.key -set_serial
 
 Серийный номер - первый из выданных Удостоверяющим Центром используя доверенный сертификат (ca.crt)
 
-### Создание списка отозванных сертфикатов (CRL)
-
-Изначально отозванных сертификатов нет. Команда общая для создания и для обновления. При первичной инициализации создаст "пустой" `CRL`.
-> `openssl.cnf` используется из следующей главы - следует создать его и структуру каталогов базы.
-
-```sh
-$ openssl ca -config openssl.cnf -gencrl -out crl.pem
-```
-
-> Примечание: Секция `CRL OPTIONS` страницы документации `ca man` содержит больше информации о создании `CRL`ов.
-
-
-Вы можете проверить содержание списка отозванных сертификатов (CRL) с помощью инструмента `openssl crl`
-```sh
-$ openssl crl -in crl.pem -noout -text
-...
-No certificates have been revoked yet, so the output will state No Revoked Certificates.
-...
-```
-
-Вы должны регулярно повторно пересоздавать CRL. По умолчанию CRL устаревает через 30 дней. Это устанавливается опцией `default_crl_days` секции `[ CA_default ]`
-
-
-### Конфиг nginx
-```conf
-    listen 443;
-    keepalive_timeout       70;
-
-    ssl                     on;
-    ssl_verify_client       on;
-    ssl_certificate         /etc/nginx/conf.d/ssl/server.crt;
-    ssl_certificate_key     /etc/nginx/conf.d/ssl/server.key;
-    ssl_client_certificate  /etc/nginx/conf.d/ssl/ca.crt;
-    ssl_crl                 /etc/nginx/conf.d/ssl/crl.pem; # Отозванные сертификаты (Certificate revocation lists)
-    # Добавить в отозванные: 
-    # пометить сертификат как отозванный
-    # openssl ca -config openssl.cnf -revoke db/newcerts/01.pem
-    # обновить список отозванных сертификатов
-    # openssl ca -config openssl.cnf -gencrl -out crl.pem
-    
-    fastcgi_param SSL_VERIFIED $ssl_client_verify; #возвращает результат проверки клиентского сертификата: “SUCCESS”, “FAILED:reason” и, если сертификат не был предоставлен, “NONE”;
-    fastcgi_param SSL_CLIENT_SERIAL $ssl_client_serial; #возвращает серийный номер клиентского сертификата для установленного SSL-соединения;
-    fastcgi_param SSL_CLIENT_CERT $ssl_client_escaped_cert; #возвращает клиентский сертификат в формате PEM (закодирован в формате urlencode) для установленного SSL-соединения (1.13.5);
-    fastcgi_param SSL_DN $ssl_client_i_dn; #возвращает строку “issuer DN” клиентского сертификата для установленного SSL-соединения согласно RFC 2253 (1.11.6);
-```
-
-Сертификат сервера является публичным. Он посылается каждому клиенту, соединяющемуся с сервером. Секретный ключ следует хранить в файле с ограниченным доступом (права доступа должны позволять главному процессу nginx читать этот файл). 
-
-теперь сервер готов принимать запросы на `https`.
-в переменных к бекенду появились переменные с информацией о сертификате, в первую очередь `SSL_VERIFIED` (принимает значение `SUCCESS`).
-
-Однако если вы попытаетесь зайти на сайт 
-(для `docker-compose -f docker-run/docker-compose.yml up -d` адрес будет `https://0.0.0.0:8082/`), 
-он выдаст ошибку:
-```
-400 Bad Request
-No required SSL certificate was sent
-```
-
-Что ж, логично, в этом-то и вся соль!
-
-## Шаг 3. Создание клиентских сертификатов
+### Подготовка конфига для клиентских сертификатов а также для списка отозванных сертификатов
 
 Предварительно потребуется создать файл `openssl.cnf`, содержащий вспомогательную информацию:
 
@@ -244,6 +183,87 @@ mkdir db/newcerts
 touch db/index.txt
 echo "01" > db/serial
 ```
+
+### Создание списка отозванных сертфикатов (CRL)
+
+Изначально отозванных сертификатов нет. Команда общая для создания и для обновления. При первичной инициализации создаст "пустой" `CRL`.
+> `openssl.cnf` используется из следующей главы - следует создать его и структуру каталогов базы.
+
+```sh
+$ openssl ca -config openssl.cnf -gencrl -out crl.pem
+```
+
+> Примечание: Секция `CRL OPTIONS` страницы документации `ca man` содержит больше информации о создании `CRL`ов.
+
+
+Вы можете проверить содержание списка отозванных сертификатов (CRL) с помощью инструмента `openssl crl`
+```sh
+$ openssl crl -in crl.pem -noout -text
+...
+No certificates have been revoked yet, so the output will state No Revoked Certificates.
+...
+```
+
+Вы должны регулярно повторно пересоздавать CRL. По умолчанию CRL устаревает через 30 дней. Это устанавливается опцией `default_crl_days` секции `[ CA_default ]`
+
+### Автообновление списка отозванных сертификатов
+
+```
+touch /home/dev/projects/yii2advanced_rbac_crl_update
+chmod +x /home/dev/projects/yii2advanced_rbac_crl_update
+```
+Скрипт
+```
+#!/bin/bash
+cd /home/dev/projects/docker-yii2-app-advanced-rbac/nginx-conf/ssl
+openssl ca -config openssl.cnf -gencrl -out crl.pem
+```
+
+crontab -e
+```
+* 11 */6 * 1 /home/dev/projects/yii2advanced_rbac_crl_update > /dev/null 2>&1
+```
+
+
+### Конфиг nginx
+```conf
+    listen 443;
+    keepalive_timeout       70;
+
+    ssl                     on;
+    ssl_verify_client       on;
+    ssl_certificate         /etc/nginx/conf.d/ssl/server.crt;
+    ssl_certificate_key     /etc/nginx/conf.d/ssl/server.key;
+    ssl_client_certificate  /etc/nginx/conf.d/ssl/ca.crt;
+    ssl_crl                 /etc/nginx/conf.d/ssl/crl.pem; # Отозванные сертификаты (Certificate revocation lists)
+    # Добавить в отозванные: 
+    # пометить сертификат как отозванный
+    # openssl ca -config openssl.cnf -revoke db/newcerts/01.pem
+    # обновить список отозванных сертификатов
+    # openssl ca -config openssl.cnf -gencrl -out crl.pem
+    
+    fastcgi_param SSL_VERIFIED $ssl_client_verify; #возвращает результат проверки клиентского сертификата: “SUCCESS”, “FAILED:reason” и, если сертификат не был предоставлен, “NONE”;
+    fastcgi_param SSL_CLIENT_SERIAL $ssl_client_serial; #возвращает серийный номер клиентского сертификата для установленного SSL-соединения;
+    fastcgi_param SSL_CLIENT_CERT $ssl_client_escaped_cert; #возвращает клиентский сертификат в формате PEM (закодирован в формате urlencode) для установленного SSL-соединения (1.13.5);
+    fastcgi_param SSL_DN $ssl_client_i_dn; #возвращает строку “issuer DN” клиентского сертификата для установленного SSL-соединения согласно RFC 2253 (1.11.6);
+```
+
+Сертификат сервера является публичным. Он посылается каждому клиенту, соединяющемуся с сервером. Секретный ключ следует хранить в файле с ограниченным доступом (права доступа должны позволять главному процессу nginx читать этот файл). 
+
+теперь сервер готов принимать запросы на `https`.
+в переменных к бекенду появились переменные с информацией о сертификате, в первую очередь `SSL_VERIFIED` (принимает значение `SUCCESS`).
+
+Однако если вы попытаетесь зайти на сайт 
+(для `docker-compose -f docker-run/docker-compose.yml up -d` адрес будет `https://0.0.0.0:8082/`), 
+он выдаст ошибку:
+```
+400 Bad Request
+No required SSL certificate was sent
+```
+
+Что ж, логично, в этом-то и вся соль!
+
+## Шаг 3. Создание клиентских сертификатов
 
 ### Создание клиентского закрытого ключа и запроса на сертификат (CSR)
 

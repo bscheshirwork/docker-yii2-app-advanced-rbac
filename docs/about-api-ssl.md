@@ -206,7 +206,7 @@ No certificates have been revoked yet, so the output will state No Revoked Certi
 
 Вы должны регулярно повторно пересоздавать CRL. По умолчанию CRL устаревает через 30 дней. Это устанавливается опцией `default_crl_days` секции `[ CA_default ]`
 
-### Автообновление списка отозванных сертификатов
+# Автообновление списка отозванных сертификатов
 
 ```
 touch /home/dev/projects/yii2advanced_rbac_crl_update
@@ -226,8 +226,9 @@ openssl ca -config openssl.cnf -gencrl -out crl.pem
 
 crontab -e
 ```
-* 11 */6 * 1 /home/dev/projects/yii2advanced_rbac_crl_update > /dev/null 2>&1
+* 11 */3 * 1 /home/dev/projects/yii2advanced_rbac_crl_update > /dev/null 2>&1
 ```
+
 
 
 ### Конфиг nginx

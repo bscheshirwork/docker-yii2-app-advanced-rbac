@@ -429,11 +429,16 @@ chmod +x /home/dev/projects/yii2advanced_rbac_crl_update
 #!/bin/bash
 cd /home/dev/projects/docker-yii2-app-advanced-rbac/nginx-conf/ssl
 openssl ca -config openssl.cnf -gencrl -out crl.pem
+/usr/local/bin/docker-compose -f /home/dev/projects/docker-yii2-app-advanced-rbac/docker-run/docker-compose.yml restart nginx
+/usr/local/bin/docker-compose -f /home/dev/projects/docker-yii2-app-advanced-rbac/docker-compose.yml restart nginx
 ```
+
+> Вниманме: Сведения из `crl.pem` получаюся `nginx` при чтении конфига. 
+Следовательно после обовления `crl.pem` нужно перечитать конфиг.
 
 crontab -e
 ```
-* 11 */6 * 1 /home/dev/projects/yii2advanced_rbac_crl_update > /dev/null 2>&1
+* 11 */3 * 1 /home/dev/projects/yii2advanced_rbac_crl_update > /dev/null 2>&1
 ```
 
 # Использование nginx-proxy

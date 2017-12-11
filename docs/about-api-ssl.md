@@ -306,7 +306,7 @@ $ openssl verify -CAfile ca.crt db/newcerts/01.pem
 db/newcerts/04.pem: OK
 ```
 
-### Отзыв сертификаторв
+### Отзыв сертификатов
 
 Для отзыва сертификатов используется следующие команды `openssl ca` (рабочая папка `nginx-conf/ssl`):  
 пометить сертификат как отозванный
@@ -316,10 +316,15 @@ Using configuration from openssl.cnf
 Revoking Certificate 01.
 Data Base Updated
 ```
-обновить список отозванных сертификатов
+Выполнить скрипт обновления списка отозванных сертификатов
+```sh
+sh /home/dev/projects/yii2advanced_rbac_crl_update
+```
+либо обновить список отозванных сертификатов и выполнить перезагрузку контейнера `nginx` 
 ```sh
 $ openssl ca -config openssl.cnf -gencrl -out crl.pem
 Using configuration from openssl.cnf
+$ /usr/local/bin/docker-compose -f /home/dev/projects/docker-yii2-app-advanced-rbac/docker-compose.yml restart nginx
 ```
 проверить список отозванных сертификатов
 ```sh
@@ -333,7 +338,6 @@ Revoked Certificates:
 Проверить сертификат после отзыва и обновления списка отозванных сертификатов
 ```sh
 $ openssl verify -CAfile ca.crt db/newcerts/04.pem
-
 ```
 
 [см. также](https://jamielinux.com/docs/openssl-certificate-authority/certificate-revocation-lists.html)

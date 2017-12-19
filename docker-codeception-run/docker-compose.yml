@@ -21,12 +21,14 @@ services:
       - php
     volumes:
       - ../nginx-conf-test:/etc/nginx/conf.d #nginx-conf
+      - ../nginx-conf/ssl:/etc/nginx/conf.d/ssl #nginx-conf of ssl
       - ../nginx-logs:/var/log/nginx #nginx-logs
     networks:
       default:
         aliases:
          - backend.dev
          - frontend.dev
+         - api.dev
   db:
     image: mysql:8.0.3
     entrypoint: ['/entrypoint.sh', '--character-set-server=utf8', '--collation-server=utf8_general_ci']

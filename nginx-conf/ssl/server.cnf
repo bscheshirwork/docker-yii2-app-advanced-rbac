@@ -1,0 +1,15 @@
+[req]
+prompt = no
+distinguished_name = dn
+req_extensions = ext
+
+[dn]
+C = RU
+L = Moscow
+O = Companyname
+OU = User
+CN = Сервер с аутентификацией клиентов
+emailAddress = server.support@site.com
+
+[ext]
+subjectAltName = DNS:api.dev,DNS:*.api.dev,IP:0.0.0.0

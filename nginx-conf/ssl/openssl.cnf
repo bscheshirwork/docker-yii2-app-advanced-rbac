@@ -1,0 +1,27 @@
+[ ca ]
+default_ca = CA_CLIENT # При подписи сертификатов # использовать секцию CA_CLIENT
+
+[ CA_CLIENT ]
+dir = ./db # Каталог для служебных файлов
+certs = $dir/certs # Каталог для сертификатов
+new_certs_dir = $dir/newcerts # Каталог для новых сертификатов
+
+database = $dir/index.txt # Файл с базой данных подписанных сертификатов
+serial = $dir/serial # Файл содержащий серийный номер сертификата (в шестнадцатеричном формате)
+certificate = ./ca.crt # Файл сертификата CA
+private_key = ./ca.key # Файл закрытого ключа CA
+
+default_days = 365 # Срок действия подписываемого сертификата
+default_crl_days = 7 # Срок действия CRL
+default_md = md5 # Алгоритм подписи
+
+policy = policy_anything # Название секции с описанием политики в отношении данных сертификата
+
+[ policy_anything ]
+countryName = optional # Поля optional - не обязательны, supplied - обязательны
+stateOrProvinceName = optional
+localityName = optional
+organizationName = optional
+organizationalUnitName = optional
+commonName = optional
+emailAddress = optional

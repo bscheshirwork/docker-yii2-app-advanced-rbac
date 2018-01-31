@@ -177,10 +177,10 @@ emailAddress = optional
 Далее надо подготовить структуру каталогов и файлов, соответствующую описанной в конфигурационном файле
 
 ```sh
-mkdir db
-mkdir db/certs
-mkdir db/newcerts
-touch db/index.txt
+mkdir db; \
+mkdir db/certs; \
+mkdir db/newcerts; \
+touch db/index.txt; \
 echo "01" > db/serial
 ```
 
@@ -307,12 +307,18 @@ db/newcerts/01.pem: OK
 ```
 
 ### Массовое доавление в цикле
+`-subj` должен отличатся для добавления в базу - новую итерацию нужно начинать с следующего номера 
 ```sh
-for (( i=01; i <= 10; i++ ));\
-do printf -v c 'client%02d' $i;\
-openssl req -new -newkey rsa:2048 -nodes -keyout $c.key -subj /C=RU/ST=Moscow/L=Moscow/O=Companyname/OU=User/CN=api$c/emailAddress=support@site.com -out $c.csr;\
-openssl ca -config openssl.cnf -in $c.csr -out $c.crt -batch;\
+for (( i=01; i <= 10; i++ )); \
+do printf -v c 'client%02d' $i; \
+openssl req -new -newkey rsa:2048 -nodes -keyout $c.key -subj /C=RU/ST=Moscow/L=Moscow/O=Companyname/OU=User/CN=api$c/emailAddress=support@site.com -out $c.csr; \
+openssl ca -config openssl.cnf -in $c.csr -out $c.crt -batch; \
 done
+```
+
+### Удаление всего вышеописаного
+```
+rm ./*.crt ./*.csr ./*.key ./*.pem && rm -Rf ./db
 ```
 
 ### Отзыв сертификатов

@@ -57,7 +57,7 @@ Host vpsserver-remoteuser
      PubkeyAuthentication no
      Port 22
 ```
-попробовать снова (подключение по алиасу)
+попробовать снова (обязательно подключение по алиасу, критично значение настроек `PasswordAuthentication yes` и `PubkeyAuthentication no`)
 ```
 localuser@localmachine:~$ ssh-copy-id -i id_localuser_to_remotesuer_vpsidhere vpsserver-remoteuser
 ```
@@ -86,9 +86,50 @@ nano ~/.ssh/authorized_keys
 chmod 600 ~/.ssh/authorized_keys
 ```
 
-
 5.Проверить подключившись по предложенной строке и `cat ~/.ssh/authorized_keys`
 
+> Важно! Не отключайтесь от сервера, пока не убедитесь в том, что SSH-ключи работают.
+
+На локальной машине откройте новый терминал и попробуйте подключиться к серверу.
+```
+localuser@localmachine:~$ ssh vpsserver-remoteuser
+```
+
+Если ключи настроены правильно, на данном этапе для подключения будет использован закрытый ключ. 
+Если же настройка не удалась, система запросит пароль.
+
+5.5.Отключение аутентификации на основе пароля (Применяется для всех пользователей)
+
+Теперь для аутентификации сервер использует SSH-ключи. Отключите аутентификацию на основе пароля. Это ограничит доступ к 
+серверу, так как SSH-ключи станут единственным способом подключиться к нему.
+
+> Важно! Отключайте аутентификацию на основе пароля только в том случае, если добавили ключи и проверили их работу. 
+В противном случае вы рискуете заблокировать себе доступ к собственному серверу!
+
+В сессии пользователя `root` или `dev` откройте настройки демона SSH.
+```sh
+root@vpsidhere:~$ sudo nano /etc/ssh/sshd_config
+```
+
+Найдите строку `PasswordAuthentication`, раскомментируйте её и измените значение на `no`.
+```conf
+PasswordAuthentication no
+```
+
+В этом файле есть ещё две настройки по умолчанию, важные для аутентификации на основе ключей. Если вы не изменяли их ранее, не изменяйте их:
+```conf
+PubkeyAuthentication yes
+ChallengeResponseAuthentication no
+```
+
+Сохраните и закройте файл (Ctrl-X, Y, Enter).
+
+Перезапустите SSH:
+```sh
+root@vpsidhere:~$ sudo systemctl reload sshd
+```
+
+Теперь аутентификация на основе пароля отключена. Получить доступ к серверу можно только при помощи SSH-ключей.
 
 ## Настройка подключения к хранилищу кода
 Создать пару ключей на сервере - для доступа к закрытым репозиториям (без защиты фразой, будет использоватся скриптами)
@@ -96,8 +137,15 @@ chmod 600 ~/.ssh/authorized_keys
 dev@vpsidhere:~# ssh-keygen -t rsa -b 4096 -C "dev@vpsidhere.vpsserver.com to bitbacket,gitlab"
 Enter file in which to save the key (/home/dev/.ssh/id_rsa): /home/dev/.ssh/id_dev_to_git
 ```
-Пользователю `bitbacket`/`gitlab`, который назначен ботом (или. если не хватает слотов - обычному) вписать публичный ключ
-сгенерированной пары (`{avatar}->bitbucket settings->SSH keys`, `{avatar}->settings->SSH keys`)
+Пользователю `bitbacket`/`gitlab`, который назначен ботом (или группе, если не хватает слотов - обычному) вписать публичный ключ
+сгенерированной пары 
+```
+cat /home/dev/.ssh/id_dev_to_git.pub
+```
+(`{avatar}->bitbucket settings->SSH keys`, `{avatar}->settings->SSH keys`)
+
+> Также, для `bitbucket.org` есть возможность добавить ключ группе
+[группе](https://bitbucket.org/account/user/yourgroup/ssh-keys/)
 
 В дальнейшем пример для `bitbucket.org`.
 
@@ -105,12 +153,38 @@ Enter file in which to save the key (/home/dev/.ssh/id_rsa): /home/dev/.ssh/id_d
 ```
 echo "Host bitbucket
      HostName bitbucket.org
-     User botusernameonbitbucket
+     User botuseroryourgroup
      IdentityFile ~/.ssh/id_dev_to_git
 " >> /home/dev/.ssh/config
 ```
 
-Если не запущен `ssh-client` 
+Проверка ssh доступа
+
+Эта команда проверяет ваш SSH-агент на ключ SSH, а затем проверяет, 
+соответствует ли этот закрытый ключ открытому ключу для существующей учетной записи Bitbucket:
+```sh
+$ ssh -T git@bitbucket.org
+```
+Варианты ответа:
+```
+$ ssh -T git@bitbucket.org
+Permission denied (publickey). 
+```
+= Вы не имеете корректных ключей, загруженных в ssh-клиент (см. ниже)
+```
+$ ssh -T git@bitbucket.org
+ssh: connect to host bitbucket.org port 22: Connection refused 
+```
+= невозможно получить IP адрес `bitbucket.org` для машины, с которой выполняется команда
+```
+$ ssh -T git@bitbucket.org
+logged in as botuseroryourgroup.
+
+You can use git or hg to connect to Bitbucket. Shell access is disabled.
+```
+= Всё в порядке!
+
+Итак, если не запущен `ssh-client` 
 ```
 remoteuser@vpsidhere:~$ ssh-add -l
 Could not open a connection to your authentication agent
@@ -132,17 +206,19 @@ remoteuser@vpsidhere:~$ ssh-add -l
 remoteuser@vpsidhere:~$ ssh -Tv git@bitbucket.org
 ```
 
-Проверка закончилась успехом? Закрепим в автозагрузке. Добавляем в конец `.bashrc` (все три строчки)
+Проверка закончилась успехом? Закрепим в автозагрузке. Добавляем в конец `.bashrc` (все три строчки, одинарные кавычки
+для `echo '' >> /home/dev/.bashrc`)
 ```
+echo '
 #!/bin/bash
 eval `ssh-agent -s`
 ssh-add ~/.ssh/id_dev_to_git
+' >> /home/dev/.bashrc
 ```
-
 
 # Для VPS позволяющих запустить докер 
 
-6.Установить `Docker`, `docker-compose`, опять-таки подробно описано [тут](https://www.8host.com/blog/ustanovka-i-ispolzovanie-docker-v-ubuntu-16-04/)
+6.Установить `Docker`, `docker-compose`, старый вариант [тут](https://www.8host.com/blog/ustanovka-i-ispolzovanie-docker-v-ubuntu-16-04/)
 За исключением первого важного шага: Install packages to allow apt to use a repository over HTTPS:
 ```
 $ sudo apt-get install -y --no-install-recommends \
@@ -151,8 +227,8 @@ $ sudo apt-get install -y --no-install-recommends \
     curl \
     software-properties-common
 ```
-Нужная часть руководства - [установка докера](./install-docker.md)
-Ели что-либо не работает, см. инструкцию на офф. сайте https://docs.docker.com/engine/installation/linux/ubuntu/
+Оффициальная инструкция установки `Docker` была изменена. Соответственно обновлён раздел [установка докера](./install-docker.md)
+В случае, если что-либо не работает см. инструкцию на [офф. сайте](https://docs.docker.com/install/linux/docker-ce/ubuntu)
 
 7.Установить `docker-compose`
 
@@ -168,10 +244,12 @@ sudo ln -sF /home/dev/projects/yii2advanced /yii2advanced
 ```
 
 Кроме клонирования репозитория с докер-композицией необходимо инициализировать `git submodule`
-в папке `php-code`. 
+в папке `php-code` и переключить его на `master`. 
 ```
 cd /home/dev/projects/yii2advanced
 git submodule update --init --recursive --remote php-code
+cd /home/dev/projects/yii2advanced/php-code
+git checkout master 
 ```
 
 9.Запустить конфигурацию `docker-compose.yml` из папки проекта `yii2advanced`.

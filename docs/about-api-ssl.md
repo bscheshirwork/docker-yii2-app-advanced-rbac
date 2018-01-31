@@ -303,7 +303,16 @@ V 180921144337Z 01 unknown ... /CN=bob@example.com
 Для проверки сертификата воспользуемся командой
 ```sh
 $ openssl verify -CAfile ca.crt db/newcerts/01.pem
-db/newcerts/04.pem: OK
+db/newcerts/01.pem: OK
+```
+
+### Массовое доавление в цикле
+```sh
+for (( i=01; i <= 10; i++ ));\
+do printf -v c 'client%02d' $i;\
+openssl req -new -newkey rsa:2048 -nodes -keyout $c.key -subj /C=RU/ST=Moscow/L=Moscow/O=Companyname/OU=User/CN=api$c/emailAddress=support@site.com -out $c.csr;\
+openssl ca -config openssl.cnf -in $c.csr -out $c.crt -batch;\
+done
 ```
 
 ### Отзыв сертификатов

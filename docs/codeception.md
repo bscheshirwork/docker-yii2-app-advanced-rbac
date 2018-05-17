@@ -12,7 +12,8 @@
 
 Копируем, например, из запущеного контейнера, средствами `docker` 
 ```
-docker cp dockercodeceptionrun_codecept_run_1:/repo/ .codecept
+rm -Rf ~/projects/.codecept
+docker cp dockercodeceptionrun_codecept_run_1:/repo/ ~/projects/.codecept
 ```
 
 Для отладки тестов
@@ -76,6 +77,28 @@ for i in frontend backend; do sudo rm php-code/$i/tests/_output/$i.tests.* php-c
 docker-compose -f docker-codeception-run/docker-compose.yml run --rm --entrypoint bash codecept
 ```
 
+## Обновление базы после добавления новых миграций
+
+1.Остановить композицию, удалить текущую базу
+```sh
+docker-compose -f ~/projects/crm/docker-codeception-run/docker-compose.yml down
+sudo rm -Rf ~/projects/crm/mysql-data-test/*
+```
+2.Запустить композицию, загрузить в вновьсозданную базу дамп
+```sh
+docker-compose -f ~/projects/crm/docker-codeception-run/docker-compose.yml up -d
+time -p docker exec -i dockercodeceptionrun_db_1 sh -c 'exec mysql -uroot -p"$MYSQL_ROOT_PASSWORD" --database=crm' < ~/projects/crm/php-code/common/tests/_data/dump.sql
+```
+3.Выполнить миграции. Не имеющие смысла в тетовом окружении и требующие зависимости других баз - разрешить внесением в дамп отметки о миграции
+с ручной корректировкой при необходимости.
+```sh
+docker-compose -f ~/projects/crm/docker-codeception-run/docker-compose.yml exec php ./yii migrate/up
+```
+4.Сохранить новый дамп, проверить, закоммитить/откатить.
+```sh
+docker exec dockercodeceptionrun_db_1 sh -c 'exec mysqldump crm -uroot -p"$MYSQL_ROOT_PASSWORD" 2>/dev/null'>~/projects/crm/php-code/common/tests/_data/dump.sql
+```
+
 ## Покрытие кода тестами и c3.php
 
 ### Настройки для `acceptance` тестов
@@ -100,13 +123,14 @@ if (file_exists(__DIR__ . '/../../c3.php')) {
 
 При этом `c3.php` расположен в `php-code/` и общий для `frontend` и `backend` групп тестов.
 ```sh
-cd php_code
-wget https://raw.github.com/Codeception/c3/2.0/c3.php
-
+cd php-code/
+rm c3.php codecept.phar
+wget https://raw.githubusercontent.com/Codeception/c3/2.4.0/c3.php
 wget http://codeception.com/codecept.phar
 ```
+
 `codecept.phar` использован, дабы не плодить мусор в вендорах (чего хотелось, до последнего, избежать)
-это позоволяет не трогать `composer.json` в секции `require-dev`. Минус - ручное обновление. 
+это позоволяет не трогать `composer.json` в секции `require-dev`. Минус - ручное обновление и медленное обновление в источнике.
 
 > Можно заметить, что при сборе данных о покрытии с помощью `c3.php` используется Codeception из `codecept.phar` и 
 выполняется код внутри контейнера сервиса `php`. Который отличался от контейнера сервиса `codecept`
@@ -207,6 +231,8 @@ paths:
     log: console/runtime/logs
 ```
 
+> Зависимости шаблона `yii2-app-advanced` в части `require-dev` конфига `composer.json` вызывают конфликты версий `Codeception`
+
 ## Codeception и Docker-инструменты PHPStorm
 
 Вдохновившись [заметкой про использоване PHPUnit](https://blog.jetbrains.com/phpstorm/2016/11/docker-remote-interpreters/)  
@@ -272,9 +298,11 @@ paths:
 
 Внимание! В этом разделе указаны текущие проблемы тестирования и заплатка.
 
+> Заплатка устарела с выходом `phpstorm_helpers:PS-181.4203.565`, файл был изменён до такой степени, что переопределять нечего.
+
 Всё отлично, казалось бы, и должно быть одинаково - но нет. Тесты, завершающиеся успехом при запуске контейнера `codecept` 
 из командной строки
-```
+```sh
 docker-compose -f docker-codeception-run/docker-compose.yml run --rm codecept run
 ...
 Time: 1.59 minutes, Memory: 62.00MB
@@ -284,7 +312,7 @@ OK (26 tests, 127 assertions)
 при запуске из `PHPStorm` в некоторых случаях провалиоись. Видимо, контейнер, создаваемый IDE изменён (например, в части пользователей)
 Также, что интерестно, IDE показывает другое количество тестов, а именно: `344 tests done: 14 failed - 1m 12s 730ms` в
 строке прогресса и
-```
+```sh
 FAILURES!
 Tests: 26, Assertions: 74, Failures: 14.
 ```
@@ -299,12 +327,12 @@ session_start(): Cannot send session cache limiter - headers already sent (outpu
 
 Для трассировки скопируем также содержимое рабочей папки образа-помощника `PHPStorm` и укажем в карте
 ```
-phpstorm_helpers:PS-173.4127.29
+phpstorm_helpers:PS-173.4674.45
 ```
 Копируем, например, из запущеного контейнера, средствами `docker` 
-```
-rm ~/projects/.phpstorm_helpers/*
-docker cp phpstorm_helpers_PS-173.4127.29:/opt/.phpstorm_helpers/ ~/projects/.phpstorm_helpers
+```sh
+rm -Rf ~/projects/.phpstorm_helpers
+docker cp phpstorm_helpers_PS-173.4674.45:/opt/.phpstorm_helpers/ ~/projects/.phpstorm_helpers
 ```
 
 Реультатом поиска и отладки стал неутешительный вывод - реализация `codeception.php` На данный момент сломана.
@@ -350,9 +378,9 @@ class PhpStorm_Codeception_ReportPrinter extends PhpStorm_Codeception_ReportPrin
 
 и удалив все старые контейнеры, которые могли закешировать его реализацию 
 (я говорю о тебе, Reflection в Codeception), можно в папке `.phpstorm_helpers` запустить билд образа.
-```
+```sh
 cd ~/projects/.phpstorm_helpers/
-docker build --no-cache --pull -t phpstorm_helpers:PS-173.4127.29 .
+docker build --no-cache --pull -t phpstorm_helpers:PS-173.4674.45 .
 ```
 
 Дальнейший запуск тестов пройдёт успешно. До следующего обновления.  

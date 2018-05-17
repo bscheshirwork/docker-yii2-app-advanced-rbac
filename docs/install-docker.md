@@ -9,12 +9,12 @@
 ## Настройка репоитория
 
 1.Обновите индекс пакетов:
-```
+```sh
 sudo apt-get update
 ```
 
 2.Добавьте возможность получать пакеты через `https`
-```
+```sh
 sudo apt-get install -y --no-install-recommends \
     apt-transport-https \
     ca-certificates \
@@ -23,13 +23,13 @@ sudo apt-get install -y --no-install-recommends \
 ```
 
 3.Добавьте оффициальный `GPG` ключ `Docker'a`
-```
+```sh
 $ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 ```
 
 4.Убедитесь, что теперь у вас есть ключ с отпечатком `9DC8 5822 9FC7 DD38 854A E2D8 8D81 803C 0EBF CD88`, 
 путем поиска последних 8 символов отпечатка.
-```
+```sh
 $ sudo apt-key fingerprint 0EBFCD88
 
 pub   4096R/0EBFCD88 2017-02-22
@@ -54,7 +54,7 @@ $ sudo add-apt-repository \
 ## Установка Docker CE
 
 1.Обновите индекс пакетов:
-```
+```sh
 sudo apt-get update
 ```
 
@@ -71,7 +71,7 @@ $ sudo apt-get install docker-ce
 использовать последнюю версию. Далее перечислены доступные версии (сокращённо, вывод усечён до первой строки).
 ```sh
 $ apt-cache madison docker-ce
- docker-ce | 17.12.0~ce-0~ubuntu | https://download.docker.com/linux/ubuntu xenial/stable amd64 Packages
+ docker-ce | 18.03.0~ce-0~ubuntu | https://download.docker.com/linux/ubuntu xenial/stable amd64 Packages
 ```
 Содержимое списка зависит от того, какие репозитории включены. Выберите конкретную версию для установки. 
 Второй столбец - строковое представление версии. Третий столбец - это имя репозитория, в котором указывается, 
@@ -91,11 +91,11 @@ $ sudo apt-get install docker-ce=<VERSION>
 
 Теперь в системе работает сервис Docker (или демон). 
 Чтобы убедиться в том, что `Docker` работает, запросите состояние:
-```
+```sh
 sudo systemctl status docker
 ```
 Команда должна вернуть (вывод усечён):
-```
+```sh
 ● docker.service - Docker Application Container Engine
    Loaded: loaded (/lib/systemd/system/docker.service; enabled; vendor preset: enabled)
    Active: active (running) since Пн 2018-01-29 10:00:00 MSK; 1min 31s ago
@@ -121,9 +121,11 @@ $ sudo docker run hello-world
 >docker: Cannot connect to the Docker daemon. Is the docker daemon running on this host?.
 See 'docker run --help'.
 
+### Добавьте своего пользователя в группу `docker`
+
 Чтобы вам не пришлось набирать префикс `sudo` каждый раз когда вам нужно запустить команду `docker`, 
 добавьте своего пользователя в группу `docker`:
-```
+```sh
 sudo usermod -aG docker $(whoami)
 ```
 
@@ -131,31 +133,31 @@ sudo usermod -aG docker $(whoami)
 
 Чтобы добавить в группу docker пользователя, который не является текущим, укажите в команде его имя:
 
-```
+```sh
 sudo usermod -aG docker username
 ```
 
 >Если вы до этого использовали `sudo docker`, может появится ошибка
-```
+```sh
 WARNING: Error loading config file: /home/user/.docker/config.json -
 stat /home/user/.docker/config.json: permission denied
 ```
 > Удалите дирректорию `~/.docker/` (она будет создана заново, но все настройки будут потеряны) либо измените владельца и
 права доступа
-```
+```sh
 $ sudo chown "$USER":"$USER" /home/"$USER"/.docker -R
 $ sudo chmod g+rwx "/home/$USER/.docker" -R
 ```
 
-Настройка Docker для автозапуска
+### Настройка Docker для автозапуска
 
 Большинство текущих дистрибутивов Linux (RHEL, CentOS, Fedora, Ubuntu 16.04 и выше) используют `systemd` 
 для управления автозапуском сервисов. Команда добавления сервиса в список автозапуска выглядит так:
-```
+```sh
 $ sudo systemctl enable docker
 ```
 Для отключения этого поведения используйте команду `disable`.
-```
+```sh
 $ sudo systemctl disable docker
 ```
 
@@ -165,27 +167,27 @@ $ sudo systemctl disable docker
 Перейдите на страницу проекта на [GitHub](https://github.com/docker/compose/releases)
 
 Следуйте инструкциям по установке в описании релиза. 
-Например, для версии 1.19.0-rc2 
+Например, для версии 1.21.0
 
 Перейти в консоль `root@host#`
-```
+```sh
 sudo -i
 ```
 в ней выполнить команды
-```
-curl -L https://github.com/docker/compose/releases/download/1.19.0-rc2/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
+```sh
+curl -L https://github.com/docker/compose/releases/download/1.21.0/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
 chmod +x /usr/local/bin/docker-compose
 ```
 и выйти
-```
+```sh
 exit
 ```
 
 Проверить версию можно так
-```
+```sh
 $ docker-compose --version
 
-docker-compose version: 1.19.0-rc2
+docker-compose version: 1.21.0
 ```
 
 > Примечание: в конфигурации `cron`, `systemctl` и т.п. необходимо указываеть полные пути к исполнимому файлу, т.е. 
@@ -195,6 +197,7 @@ docker-compose version: 1.19.0-rc2
 
 Для обновления `Docker CE`, сначала обновите список пакетов `sudo apt-get update`, 
 затем следуйте инструкциям к версии той новой версии, которую вы хотите установить.
+> `sudo apt upgrade -y` достаточно для обновления `Docker CE` до последней доступной версии.
 
 # Удаление
 

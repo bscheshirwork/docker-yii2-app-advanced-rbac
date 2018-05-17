@@ -12,15 +12,6 @@
 [rbac](#rbac) | графическое представление RBAC | githubjeka\rbac\Module
 [admin](#admin) | управление RBAC | mdm\admin\Module
 
-Ниже приведён список источников миграций, которые были использованы в требуемом порядке,
-при установке модулей по отдельности необходимо использовать соответствуюие пути миграции. Эти же пути должны быть указаны
-для отмены миграции:
-
-```
-./yii migrate/up --migrationPath=@yii/rbac/migrations/
-./yii migrate/up --migrationPath=@dektrium/user/migrations
-./yii migrate/up --migrationPath=@mdm/admin/migrations
-```
 
 user <span id="start-modules-user"></span>
 -----------------------
@@ -57,7 +48,7 @@ user <span id="start-modules-user"></span>
 
 Конфигурация yii2-advanced-rbac/common/config/main.php
 
-```
+```php
     'modules' => [
         'user' => [
             'class' => 'dektrium\user\Module',
@@ -68,7 +59,7 @@ user <span id="start-modules-user"></span>
 Запрет доступа к профилю, восстановлению пароля, регистрации и настройкам своего аккаунта из бекенда: в
 `yii2-advanced-rbac/backend/config/main.php` добавить:
 
-```
+```php
     'modules' => [
         'user' => [
             // Отключить контроллеры profile, recovery, registration, settings. Остались security, admin
@@ -79,7 +70,7 @@ user <span id="start-modules-user"></span>
 
 Запрет администрирования с фронтенда: в `yii2-advanced-rbac/frontend/config/main.php` добавить:
 
-```
+```php
     'modules' => [
         'user' => [
             // Отключить контроллер admin. Остались profile, recovery, registration, security, settings.
@@ -100,7 +91,7 @@ rbac <span id="start-modules-rbac"></span>
 Конфигурация backend
 В примере указан стандартный фильтр доступа к модулю
 
-```
+```php
 'modules' => [
     'rbac' => [
         'class' => 'githubjeka\rbac\Module',
@@ -134,7 +125,7 @@ http://localhost/path/to/index.php?r=admin/assignment
 ```
 
 Конфигурация `@backend/config/main.php`
-```
+```php
     'modules' => [
         'admin' => [
             'class' => 'mdm\admin\Module',
@@ -146,7 +137,7 @@ http://localhost/path/to/index.php?r=admin/assignment
 Во время разработки может понадобится отключить проверку прав для некоторых путей.
 Этого можно достигнуть следующим конфигом (фильтр добавлен глобально):
 
-```
+```php
 'modules' => [...],
 ...
 //фильтр для приложения

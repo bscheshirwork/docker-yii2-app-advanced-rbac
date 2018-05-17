@@ -47,9 +47,9 @@ url = https://github.com/yiisoft/yii2-app-advanced.git
 
 ### Обновление
 
-Важно помнить, что без соответствующего опубликованого коммита в подмодуле `php-code` репозиторий `docker`
+Важно помнить, что без соответствующего опубликованого коммита в подмодуле `php-code` репозиторий `docker-...`
 будет ссылатся на несуществующие данные.  
-С другой стороны при публикации подмодуля `php-code` без публикации `docker` с соответствующим коммитом 
+С другой стороны при публикации подмодуля `php-code` без публикации `docker-...` с соответствующим коммитом 
 при клонировании репозитория с подмодулями даст устаревшие данные
 Конечно, раздельный `git pull` даёт актуальную информацию, но указывать будет не на конечный коммит.
 
@@ -76,14 +76,14 @@ cd ../..
 cd ./php-code
 git pull parent master
 cd ..
-sed -i -e 's/\(php:\?\)7.2.1/\17.2.2/;s/nginx:1.13.7/nginx:1.13.8/' ./docker-compose.yml ./docker-run/docker-compose.yml ./docker-codeception-run/docker-compose.yml
+sed -i -e 's/\(php:\?\)7.2.3/\17.2.4/;s/nginx:1.13.10/nginx:1.13.11/' ./docker-compose.yml ./docker-run/docker-compose.yml ./docker-codeception-run/docker-compose.yml
 git status
 ```
 
 После завершения слияния коммит и во внешний репозиторий.
 
 И для последующих
-```
+```sh
 cd ./docker-run/docker-php
 git pull origin master
 cd ../..
@@ -98,6 +98,11 @@ git status
 ```
 
 и т.п.
+
+Для всей цепочки можно запустить обновление общих подмодулей в цикле:
+```sh
+for i in "/home/dev/projects/docker-yii2-app-advanced" "/home/dev/projects/docker-yii2-app-advanced-rbac"; do for j in "docker-codeception-run/docker-codeception-yii2" "docker-run/docker-php"; do cd $i/$j; git pull; done; done
+```
 
 # Внешние репозитории
 Для удобства используются псевдонимы `parent`, добавленные для соответствующих репозиториев (`url` см. выше)

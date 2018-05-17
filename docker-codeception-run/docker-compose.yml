@@ -1,7 +1,7 @@
 version: '2'
 services:
   php:
-    image: bscheshir/php:7.2.2-fpm-alpine-4yii2-xdebug
+    image: bscheshir/php:7.2.5-fpm-alpine-4yii2-xdebug
     restart: always
     volumes:
       - ../php-code:/var/www/html #php-code
@@ -10,10 +10,10 @@ services:
       - db
     environment:
       TZ: Europe/Moscow
-      XDEBUG_CONFIG: "remote_host=192.168.0.83 remote_port=9001 remote_enable=On var_display_max_data=1024 var_display_max_depth=5"
+      XDEBUG_CONFIG: "remote_host=dev-Aspire-V3-772 remote_port=9001 remote_enable=On var_display_max_data=1024 var_display_max_depth=5"
       PHP_IDE_CONFIG: "serverName=yii2advanced"
   nginx:
-    image: nginx:1.13.8-alpine
+    image: nginx:1.14.0-alpine
     restart: always
     depends_on:
       - php
@@ -32,7 +32,8 @@ services:
     environment:
       TZ: Europe/Moscow
   db:
-    image: mysql:8.0.3
+    image: mysql:8.0.11
+    entrypoint: ['/entrypoint.sh', '--default-authentication-plugin=mysql_native_password'] # https://dev.mysql.com/doc/refman/8.0/en/server-system-variables.html#sysvar_default_authentication_plugin
     restart: always
     ports:
       - "33006:3306"
@@ -45,7 +46,7 @@ services:
       MYSQL_USER: yii2advanced
       MYSQL_PASSWORD: yii2advanced
   codecept:
-    image: bscheshir/codeception:php7.2.2-fpm-alpine-yii2
+    image: bscheshir/codeception:php7.2.5-fpm-alpine-yii2
     depends_on:
       - nginx
       - browser
@@ -53,11 +54,11 @@ services:
       - php
     environment:
       TZ: Europe/Moscow
-      XDEBUG_CONFIG: "remote_host=192.168.0.83 remote_port=9002 remote_enable=On"
+      XDEBUG_CONFIG: "remote_host=dev-Aspire-V3-772 remote_port=9002 remote_enable=On"
       PHP_IDE_CONFIG: "serverName=codeception"
   browser:
-    image: selenium/standalone-chrome-debug:3.9.1
-#    image: selenium/standalone-firefox-debug:3.9.1
+    image: selenium/standalone-chrome-debug:3.7
+#    image: selenium/standalone-firefox-debug:3.12.0
     volumes:
       - /dev/shm:/dev/shm # the docker run instance may use the default 64MB, that may not be enough in some cases
     ports:

@@ -43,33 +43,15 @@ server {
         deny all;
     }
 }
-
-server {
-    listen  443;
-    server_name api.dev www.api.dev;
-
-    access_log  /var/log/nginx/proxy-access.log;
-    error_log   /var/log/nginx/proxy-error.log;
-
-    location / {
-        proxy_pass http://nginx:8084/;
-        proxy_set_header   X-Real-IP $remote_addr;
-        proxy_set_header   Host $http_host;
-        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
-
-    location ~ /\.(ht|svn|git) {
-        deny all;
-    }
-}
 ```
+> ssl прокси описано в данном документе.
 
 ### `docker-compose.yml`
 ```yml
 version: '2'
 services:
   nginx-proxy:
-    image: nginx:1.14.0-alpine
+    image: nginx:1.15.0-alpine
     restart: always
     ports:
       - "80:80"

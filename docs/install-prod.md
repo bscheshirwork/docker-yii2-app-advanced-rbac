@@ -157,6 +157,7 @@ echo "Host bitbucket
      IdentityFile ~/.ssh/id_dev_to_git
 " >> ~/.ssh/config
 ```
+https://docs.gitlab.com/ee/ssh/README.html#configure-ssh-to-point-to-a-different-directory
 
 Проверка ssh доступа
 

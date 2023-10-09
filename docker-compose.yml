@@ -10,7 +10,6 @@ services:
       - db
     environment:
       TZ: Europe/Moscow
-      XDEBUG_CONFIG: "remote_enable=Off remote_autostart=Off"
   nginx:
     image: nginx:1.17.8-alpine
     restart: always
